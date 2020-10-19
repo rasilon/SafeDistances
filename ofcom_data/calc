@@ -7,12 +7,12 @@ my $p = 10.0;
 sub calculate_limit {
     my($p,$f) = @_;
 
-    return calculate_limit_0($p) if($f <= 0.15);
-    return calculate_limit_1($p) if($f <= 1.0);
-    return calculate_limit_2($p) if($f <= 10.0);
-    return calculate_limit_3($p) if($f <= 400.0);
-    return calculate_limit_4($p) if($f <= 2000.0);
-    return calculate_limit_5($p) if($f <= 300000.0);
+    return calculate_limit_0($p,$f) if($f <= 0.15);
+    return calculate_limit_1($p,$f) if($f <= 1.0);
+    return calculate_limit_2($p,$f) if($f <= 10.0);
+    return calculate_limit_3($p,$f) if($f <= 400.0);
+    return calculate_limit_4($p,$f) if($f <= 2000.0);
+    return calculate_limit_5($p,$f) if($f <= 300000.0);
 }
 
 
@@ -21,7 +21,7 @@ sub pi {
 }
 
 sub calculate_limit_0 {
-    my($p) = @_;
+    my($p,$f) = @_;
     my $max_e = 87.000;
     my $max_h = 5.000;
     my $max_p = undef;
@@ -30,9 +30,9 @@ sub calculate_limit_0 {
 }
 
 sub calculate_limit_1 {
-    my($p) = @_;
+    my($p,$f) = @_;
     my $max_e = 87.000;
-    my $max_h = 0.005;
+    my $max_h = 0.73/$f; #=0.73/$'Ofcom calculator ICNIRP 1998'.D6
     my $max_p = undef;
     #printf("Using max_e %f, max_h %f, max_p %f, power %f\n",$max_e,$max_h,$max_p,$p);
 
@@ -40,9 +40,9 @@ sub calculate_limit_1 {
 }
 
 sub calculate_limit_2 {
-    my($p) = @_;
-    my $max_e = 7.250;
-    my $max_h = 0.005;
+    my($p,$f) = @_;
+    my $max_e = 87.0/sqrt($f); #=87/SQRT($'Ofcom calculator ICNIRP 1998'.D6)
+    my $max_h = 0.73 / $f; #=0.73/$'Ofcom calculator ICNIRP 1998'.D6
     my $max_p = undef;
     #printf("Using max_e %f, max_h %f, max_p %f, power %f\n",$max_e,$max_h,$max_p,$p);
 
@@ -50,7 +50,7 @@ sub calculate_limit_2 {
 }
 
 sub calculate_limit_3 {
-    my($p) = @_;
+    my($p,$f) = @_;
     my $max_e = 28.000;
     my $max_h = 0.073;
     my $max_p = 2.000;
@@ -60,17 +60,17 @@ sub calculate_limit_3 {
 }
 
 sub calculate_limit_4 {
-    my($p) = @_;
-    my $max_e = 16.500;
-    my $max_h = 0.044;
-    my $max_p = 0.720;
+    my($p,$f) = @_;
+    my $max_e = 1.357 * sqrt($f); #=1.375*SQRT($'Ofcom calculator ICNIRP 1998'.D6)
+    my $max_h = 0.0037 * sqrt($f); #=0.0037*SQRT($'Ofcom calculator ICNIRP 1998'.D6)
+    my $max_p = $f/200.0; #=$'Ofcom calculator ICNIRP 1998'.D6/200
     #printf("Using max_e %f, max_h %f, max_p %f, power %f\n",$max_e,$max_h,$max_p,$p);
 
     return sqrt($p*(1+0.6)**2/($max_p*4*pi()));
 }
 
 sub calculate_limit_5 {
-    my($p) = @_;
+    my($p,$f) = @_;
     my $max_e = 61.000;
     my $max_h = 0.160;
     my $max_p = 10.000;
