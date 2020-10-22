@@ -1,0 +1,209 @@
+#!/usr/bin/perl -w
+use strict;
+use List::Util qw[max];
+
+my $f = 10.0;
+my $p = 10.0;
+
+sub pi {
+    return 3.141592654;
+}
+# Ofcom formulae
+sub calculate_limit {
+    my($p,$f) = @_;
+
+    return calculate_limit_0($p,$f) if($f <= 0.15);
+    return calculate_limit_1($p,$f) if($f <= 1.0);
+    return calculate_limit_2($p,$f) if($f <= 10.0);
+    return calculate_limit_3($p,$f) if($f <= 400.0);
+    return calculate_limit_4($p,$f) if($f <= 2000.0);
+    return calculate_limit_5($p,$f) if($f <= 300000.0);
+}
+
+sub calculate_limit_0 { # < 150kHz
+    my($p,$f) = @_;
+    my $max_e = 87.0;
+    my $max_h = 5.0;
+    my $max_p = undef;
+
+    return max( sqrt(($p*377*(1+0.6)**2)/(4*pi()*($max_e**2))),  sqrt($p*(1+0.6)**2/(4*pi()*377*($max_h**2))));
+}
+
+sub calculate_limit_1 { # 65kHz to 1MHz
+    my($p,$f) = @_;
+    my $max_e = 87.000;
+    my $max_h = 0.73/$f; #=0.73/$'Ofcom calculator ICNIRP 1998'.D6
+    my $max_p = undef;
+    #printf("Using max_e %f, max_h %f, max_p %f, power %f\n",$max_e,$max_h,$max_p,$p);
+
+    return max(sqrt(($p*377*(1+0.6)**2)/(4*pi()*($max_e**2))), sqrt($p*(1+0.6)**2/(4*pi()*377*($max_h**2))));
+}
+
+sub calculate_limit_2 { # 1MHz to 10MHz
+    my($p,$f) = @_;
+    my $max_e = 87.0/sqrt($f); #=87/SQRT($'Ofcom calculator ICNIRP 1998'.D6)
+    my $max_h = 0.73 / $f; #=0.73/$'Ofcom calculator ICNIRP 1998'.D6
+    my $max_p = undef;
+    #printf("Using max_e %f, max_h %f, max_p %f, power %f\n",$max_e,$max_h,$max_p,$p);
+
+    return max(sqrt(($p*377*(1+0.6)**2)/(4*pi()*($max_e**2))), sqrt($p*(1+0.6)**2/(4*pi()*377*($max_h**2))));
+}
+
+sub calculate_limit_3 { # 10MHz to 400MHz
+    my($p,$f) = @_;
+    my $max_e = 28.000;
+    my $max_h = 0.073;
+    my $max_p = 2.000;
+    #printf("Using max_e %f, max_h %f, max_p %f, power %f\n",$max_e,$max_h,$max_p,$p);
+
+    return sqrt($p*(1+0.6)**2/($max_p*4*pi()));
+}
+
+sub calculate_limit_4 { # 400MHz to 2000MHz
+    my($p,$f) = @_;
+    my $max_e = 1.357 * sqrt($f); #=1.375*SQRT($'Ofcom calculator ICNIRP 1998'.D6)
+    my $max_h = 0.0037 * sqrt($f); #=0.0037*SQRT($'Ofcom calculator ICNIRP 1998'.D6)
+    my $max_p = $f/200.0; #=$'Ofcom calculator ICNIRP 1998'.D6/200
+    #printf("Using max_e %f, max_h %f, max_p %f, power %f\n",$max_e,$max_h,$max_p,$p);
+
+    return sqrt($p*(1+0.6)**2/($max_p*4*pi()));
+}
+
+sub calculate_limit_5 { # 2GHz up
+    my($p,$f) = @_;
+    my $max_e = 61.000;
+    my $max_h = 0.160;
+    my $max_p = 10.000;
+    #printf("Using max_e %f, max_h %f, max_p %f, power %f\n",$max_e,$max_h,$max_p,$p);
+
+    return sqrt($p*(1+0.6)**2/($max_p*4*pi()));
+}
+
+# ICNIRP formulae
+sub distance_for_E {
+    my($p,$max_e) = @_;
+    return sqrt(($p*377*(1+0.6)**2)/(4*pi()*($max_e**2)));
+}
+
+sub distance_for_H {
+    my($p,$max_h) = @_;
+    return sqrt($p*(1+0.6)**2/(4*pi()*377*($max_h**2)));
+}
+
+sub distance_for_P {
+    my($p,$max_p) = @_;
+    return sqrt($p*(1+0.6)**2/($max_p*4*pi()));
+}
+
+sub calculate_icnirp_occupational {
+    my($p,$f) = @_;
+
+    return calculate_icnirp_occupational_0($p,$f) if($f <= 0.065);
+    return calculate_icnirp_occupational_1($p,$f) if($f <= 1.0);
+    return calculate_icnirp_occupational_2($p,$f) if($f <= 10.0);
+    return calculate_icnirp_occupational_3($p,$f) if($f <= 400.0);
+    return calculate_icnirp_occupational_4($p,$f) if($f <= 2000.0);
+    return calculate_icnirp_occupational_5($p,$f) if($f <= 300000.0);
+}
+
+sub calculate_icnirp_occupational_0 { # < 065kHz
+    my($p,$f) = @_;
+    my $max_e = 610.0;
+    my $max_h = 24.4;
+    my $max_p = undef;
+
+    return max(
+        distance_for_E($p,$max_e),
+        distance_for_H($p,$max_h)
+    );
+}
+
+sub calculate_icnirp_occupational_1 { # 100kHz to 1MHz
+    my($p,$f) = @_;
+    my $max_e = 610.0;
+    my $max_h = 1.6/$f;
+    my $max_p = undef;
+
+    return max(
+        distance_for_E($p,$max_e),
+        distance_for_H($p,$max_h)
+    );
+}
+
+sub calculate_icnirp_occupational_2 { # 1MHz to 10MHz
+    my($p,$f) = @_;
+    my $max_e = 610.0/$f;
+    my $max_h = 1.6 / $f;
+    my $max_p = undef;
+
+    return max(
+        distance_for_E($p,$max_e),
+        distance_for_H($p,$max_h)
+    );
+}
+
+sub calculate_icnirp_occupational_3 { # 10MHz to 400MHz
+    my($p,$f) = @_;
+    my $max_e = 61.0;
+    my $max_h = 0.16;
+    my $max_p = 10.0;
+
+    return distance_for_P($p,$max_p);
+}
+
+sub calculate_icnirp_occupational_4 { # 400 MHz to 2gHz
+    my($p,$f) = @_;
+    my $max_e = 3.0 * sqrt($f);
+    my $max_h = 0.008 * sqrt($f);
+    my $max_p = $f/40.0;
+
+    return distance_for_P($p,$max_p);
+}
+
+sub calculate_icnirp_occupational_5 { # 2GHz up
+    my($p,$f) = @_;
+    my $max_e = 137.0;
+    my $max_h = 0.36;
+    my $max_p = 50.0;
+
+    return distance_for_P($p,$max_p);
+}
+
+
+
+# common
+sub run_graph {
+    my ($f,$outfile) = @_;
+    for(my $p = 1.0;$p <= 4000.0 ; $p += 2){
+        printf($outfile "%f,%f,%f\n",$p,
+            calculate_limit($p,$f),
+            calculate_icnirp_occupational($p,$f)
+        );
+    }
+}
+
+my $outfile = undef;
+open($outfile,">","distances_100-150kHz.csv") or die("$!");
+run_graph(0.101,$outfile);
+close($outfile);
+
+open($outfile,">","distances_150kHz-1MHz.csv") or die("$!");
+run_graph(0.171,$outfile);
+close($outfile);
+
+open($outfile,">","distances_1MHz-10MHz.csv") or die("$!");
+run_graph(1.101,$outfile);
+close($outfile);
+
+open($outfile,">","distances_10MHz-400MHz.csv") or die("$!");
+run_graph(11.101,$outfile);
+close($outfile);
+
+open($outfile,">","distances_400MHz-2000MHz.csv") or die("$!");
+run_graph(430.101,$outfile);
+close($outfile);
+
+open($outfile,">","distances_2000MHz-up.csv") or die("$!");
+run_graph(2111.0,$outfile);
+close($outfile);
+
